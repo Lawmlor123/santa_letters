@@ -18,14 +18,17 @@ app.use((req, _res, next) => {
   next();
 });
 
-// 📄 Path to letters.csv
+// 📄 Path to letters.csv (in current working directory)
 const CSV_PATH = path.join(__dirname, "letters.csv");
 
 // ✨ Create CSV file if missing
-if (!fs.existsSync(CSV_PATH)) {
-  fs.writeFileSync(CSV_PATH, "Date,Name,Country,Email,Letter\n");
-  console.log("✨ Created new letters.csv at:", CSV_PATH);
+function ensureCsvExists() {
+  if (!fs.existsSync(CSV_PATH)) {
+    fs.writeFileSync(CSV_PATH, "Date,Name,Country,Email,Letter\n");
+    console.log("✨ Created new letters.csv at:", CSV_PATH);
+  }
 }
+ensureCsvExists();
 
 // 🎁 --- ROUTE 1: /save-letter ---
 app.post("/save-letter", (req, res) => {
@@ -35,9 +38,10 @@ app.post("/save-letter", (req, res) => {
 
     if (!name || !country || !email || !letter) {
       console.warn("⚠️ Missing fields");
-      return res.status(400).send({ status: "error", message: "Missing fields" });
+      return res.status(400).json({ status: "error", message: "Missing fields" });
     }
 
+    ensureCsvExists();
     const timestamp = new Date().toISOString().replace("T", " ").split(".")[0];
     const safeLetter = letter.replace(/"/g, '""');
     const line = `"${timestamp}","${name}","${country}","${email}","${safeLetter}"\n`;
@@ -45,16 +49,14 @@ app.post("/save-letter", (req, res) => {
     fs.appendFile(CSV_PATH, line, (err) => {
       if (err) {
         console.error("❌ Error writing letter:", err);
-        return res
-          .status(500)
-          .send({ status: "error", message: "Could not save letter" });
+        return res.status(500).json({ status: "error", message: "Could not save letter" });
       }
       console.log("✅ Letter saved to:", CSV_PATH);
-      res.send({ status: "ok" });
+      res.json({ status: "ok" });
     });
   } catch (err) {
     console.error("❌ Unexpected error:", err);
-    res.status(500).send({ status: "error" });
+    res.status(500).json({ status: "error" });
   }
 });
 
@@ -138,7 +140,7 @@ app.get("/admin", (_req, res) => {
   res.send(html);
 });
 
-// 🧰 Helper to parse a CSV line correctly
+// 🧰 Helper to parse a CSV line
 function parseCSVLine(line) {
   const matches = line.match(/("([^"]*)"|[^,]+)(?=,|$)/g);
   return matches ? matches.map((v) => v.replace(/^"|"$/g, "")) : [];
@@ -147,6 +149,12 @@ function parseCSVLine(line) {
 // 🌍 --- ROUTE 3: Static files ---
 app.use(express.static(__dirname));
 
+// ❌ Simple fallback for unknown routes
+app.use((_req, res) => {
+  res.status(404).send("<h2>🎄 Page not found</h2>");
+});
+
+// 🚀 --- START SERVER ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🎅 Santa server running on port ${PORT}`);
