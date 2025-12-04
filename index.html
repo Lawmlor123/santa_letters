@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Letter to Santa 🎅</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(180deg, #ffecd2 0%, #fcb69f 100%);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      max-width: 500px;
+      width: 100%;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #d62828;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      color: #333;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1em;
+    }
+    button {
+      background-color: #d62828;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 1em;
+      margin-top: 20px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #b91c1c;
+    }
+    .response {
+      margin-top: 25px;
+      background: #fff8e7;
+      border-left: 5px solid #d62828;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎄 Write Your Letter to Santa 🎅</h1>
+
+    <form id="santaForm">
+      <label for="name">Your First Name:</label>
+      <input type="text" id="name" name="name" required />
+
+      <label for="country">Country:</label>
+      <select id="country" name="country" required>
+        <option value="">Select your country</option>
+        <option value="USA">USA</option>
+        <option value="Canada">Canada</option>
+        <option value="UK">UK</option>
+        <option value="Australia">Australia</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label for="email">Your Email (for Santa’s list):</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="letter">Your Letter to Santa:</label>
+      <textarea id="letter" name="letter" rows="5" placeholder="Dear Santa, this year I would really love..." required></textarea>
+
+      <button type="submit">Send Letter 📬</button>
+    </form>
+
+    <div class="response" id="response"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('santaForm');
+    const responseDiv = document.getElementById('response');
+
+    const goodActions = [
+      "ask mom or dad if they need help with chores",
+      "share your toys with a friend or sibling",
+      "draw a picture for someone you love",
+      "give someone a big Christmas hug today",
+      "say ‘thank you’ when someone helps you"
+    ];
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const country = document.getElementById('country').value;
+      const email = document.getElementById('email').value.trim();
+      const letter = document.getElementById('letter').value.trim();
+
+      // build Santa's reply
+      let askedFor = "a surprise";
+      const wishMatch = letter.match(/(?:want|would like|wish for|hope for)\s+([a-zA-Z0-9\s]+)/i);
+      if (wishMatch) askedFor = wishMatch[1].trim();
+
+      const action = goodActions[Math.floor(Math.random() * goodActions.length)];
+
+      const reply = `
+        <h3>🎅 A Special Message from Santa</h3>
+        <p>Ho ho ho! Hello ${name} from ${country}!</p>
+        <p>I just read your lovely letter. I see you asked for <strong>${askedFor}</strong> — what a wonderful choice!</p>
+        <p>Remember to be very good this year and keep being kind and cheerful. Maybe today you can ${action} — that would make the elves so proud!</p>
+        <p>Keep believing in the magic of Christmas, ${name}. 🎄<br>
+        Love,<br>Santa Claus 🎅</p>
+      `;
+
+      responseDiv.innerHTML = reply;
+      responseDiv.style.display = 'block';
+
+      // 📤 send the data to your Node.js backend
+      try {
+        const res = await fetch('/save-letter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, country, email, letter })
+        });
+
+        const data = await res.json();
+        if (data.status === 'ok') {
+          console.log('✅ Letter sent to server');
+        } else {
+          console.warn('⚠️ Server responded with error:', data);
+        }
+      } catch (err) {
+        console.error('❌ Error sending letter to server:', err);
+      }
+
+      // optional: clear the form
+      form.reset();
+    });
+  </script>
+</body>
+</html>
