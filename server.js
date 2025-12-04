@@ -30,7 +30,60 @@ function ensureCsvExists() {
 }
 ensureCsvExists();
 
-// 🎁 --- ROUTE 1: /save-letter ---
+/* 🎅 ----------------------------------------------------------
+   TEMPLATE‑BASED SANTA REPLIES
+   ---------------------------------------------------------- */
+function makeTemplateReply(letter, name, country) {
+  const text = letter.toLowerCase();
+
+  // keyword groups
+  const presents = ["toy", "gift", "present", "lego", "barbie", "bike", "truck", "doll"];
+  const behaviour = ["good", "nice", "naughty", "help", "kind", "sharing"];
+  const reindeer = ["reindeer", "rudolph", "dasher", "vixen", "comet", "blitzen"];
+  const christmas = ["christmas", "snow", "elf", "elves", "tree", "holiday", "season"];
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const matches = (arr) => arr.some((w) => text.includes(w));
+
+  if (matches(presents))
+    return pick([
+      `Ho ho ho, ${name}! Santa is polishing a shiny new surprise just for you in ${country}! 🎁`,
+      `${name}, the elves are wrapping plenty of toys for good children all around ${country}! 🎄`,
+      `Santa can almost hear the rustle of gift paper, ${name}! ${country} is on the nice list! ✨`,
+    ]);
+
+  if (matches(behaviour))
+    return pick([
+      `Santa’s heart grows three sizes each time he hears how good ${name} has been! ❤️`,
+      `${name}, the kindness you show in ${country} makes the whole North Pole smile! 🌟`,
+      `Ho ho ho! ${name}, keep up the wonderful behaviour — the elves are cheering for you! 🎅`,
+    ]);
+
+  if (matches(reindeer))
+    return pick([
+      `Rudolph gave a happy snort when he read your letter, ${name}! 🦌`,
+      `${name}, Dasher and Dancer nodded their antlers in delight from ${country}! ❄️`,
+      `Santa says the reindeer can’t wait to visit ${country} this year! ✨`,
+    ]);
+
+  if (matches(christmas))
+    return pick([
+      `The elves are hanging lights across the workshop — Christmas joy is spreading to ${country}, ${name}! 🎄`,
+      `Ho ho ho! ${name}, may your Christmas in ${country} sparkle like tinsel and cocoa! ☕🎅`,
+      `Santa just sprinkled a little snow magic your way, ${name}! ❄️`,
+    ]);
+
+  // default fallback
+  return pick([
+    `Thank you for your lovely letter, ${name}! Santa read it by the fire tonight. 🔥`,
+    `${name}, your words warmed Santa’s cocoa mug right here at the North Pole! ☕🎅`,
+    `Ho ho ho, ${name}! The elves loved hearing from someone in ${country}! ✨`,
+  ]);
+}
+
+/* 🎁 ----------------------------------------------------------
+   ROUTE 1: /save-letter
+   ---------------------------------------------------------- */
 app.post("/save-letter", (req, res) => {
   try {
     const { name, country, email, letter } = req.body;
@@ -52,7 +105,10 @@ app.post("/save-letter", (req, res) => {
         return res.status(500).json({ status: "error", message: "Could not save letter" });
       }
       console.log("✅ Letter saved to:", CSV_PATH);
-      res.json({ status: "ok" });
+
+      // Generate a personalized Santa reply
+      const santaReply = makeTemplateReply(letter, name, country);
+      res.json({ status: "ok", reply: santaReply });
     });
   } catch (err) {
     console.error("❌ Unexpected error:", err);
@@ -60,7 +116,9 @@ app.post("/save-letter", (req, res) => {
   }
 });
 
-// 🎅 --- ROUTE 2: /admin --- FINAL VERSION ---
+/* 🎅 ----------------------------------------------------------
+   ROUTE 2: /admin
+   ---------------------------------------------------------- */
 app.get("/admin", (_req, res) => {
   if (!fs.existsSync(CSV_PATH)) return res.send("<h2>No letters yet!</h2>");
 
