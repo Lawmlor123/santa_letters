@@ -114,7 +114,7 @@
       const email = document.getElementById('email').value.trim();
       const letter = document.getElementById('letter').value.trim();
 
-      // build Santa's reply
+      // Create Santa's friendly reply
       let askedFor = "a surprise";
       const wishMatch = letter.match(/(?:want|would like|wish for|hope for)\s+([a-zA-Z0-9\s]+)/i);
       if (wishMatch) askedFor = wishMatch[1].trim();
@@ -133,7 +133,7 @@
       responseDiv.innerHTML = reply;
       responseDiv.style.display = 'block';
 
-      // 📤 send the data to your Heroku backend
+      // 📤 Send the data to your Heroku backend
       try {
         const res = await fetch('https://santaletters-ddd1bc57682b.herokuapp.com/save-letter', {
           method: 'POST',
@@ -141,17 +141,22 @@
           body: JSON.stringify({ name, country, email, letter })
         });
 
-        const data = await res.json();
-        if (data.status === 'ok') {
-          console.log('✅ Letter sent to server');
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = { status: 'error', message: 'Invalid JSON from server' };
+        }
+
+        if (res.ok && data.status === 'ok') {
+          console.log('✅ Letter sent to server successfully!');
         } else {
-          console.warn('⚠️ Server responded with error:', data);
+          console.warn('⚠️ Server responded with an error:', data);
         }
       } catch (err) {
         console.error('❌ Error sending letter to server:', err);
       }
 
-      // optional: clear the form
       form.reset();
     });
   </script>
