@@ -1,7 +1,7 @@
 // server.js
 import express from "express";
 import fs from "fs";
-import path from "path";
+import path, { join } from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
 
@@ -204,15 +204,23 @@ function parseCSVLine(line) {
   return matches ? matches.map((v) => v.replace(/^"|"$/g, "")) : [];
 }
 
-// 🌍 --- ROUTE 3: Static files ---
-app.use(express.static(__dirname));
+/* 🌍 ----------------------------------------------------------
+   ROUTE 3: Static files
+   ---------------------------------------------------------- */
 
-// ❌ Simple fallback for unknown routes
+// ✅ Serve static files from a dedicated "public" folder (avoid serving entire __dirname)
+app.use(express.static(join(__dirname, "public")));
+
+/* ❌ ----------------------------------------------------------
+   Fallback for unknown routes
+   ---------------------------------------------------------- */
 app.use((_req, res) => {
   res.status(404).send("<h2>🎄 Page not found</h2>");
 });
 
-// 🚀 --- START SERVER ---
+/* 🚀 ----------------------------------------------------------
+   START SERVER
+   ---------------------------------------------------------- */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🎅 Santa server running on port ${PORT}`);
