@@ -133,9 +133,9 @@
       responseDiv.innerHTML = reply;
       responseDiv.style.display = 'block';
 
-      // 📤 send the data to your Node.js backend
+      // 📤 send the data to your Heroku backend
       try {
-        const res = await fetch('/save-letter', {
+        const res = await fetch('https://santaletters-ddd1bc57682b.herokuapp.com/save-letter', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, country, email, letter })
